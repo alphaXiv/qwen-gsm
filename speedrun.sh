@@ -3,6 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+export ARTIFACTS_DIR="${ARTIFACTS_DIR:-$SCRIPT_DIR/.openresearch/artifacts}"
+
 echo "uv version: $(uv --version)"
 export UV_TORCH_BACKEND=auto
 
@@ -58,4 +60,4 @@ else
 fi
 echo "UNSLOTH_VLLM_STANDBY=$UNSLOTH_VLLM_STANDBY GPU_MEM_UTIL=$GPU_MEM_UTIL VLLM_USE_FLASHINFER_SAMPLER=${VLLM_USE_FLASHINFER_SAMPLER:-<unset>}"
 
-exec uv run --python 3.11 "$SCRIPT_DIR/qwen-4b-gsm8k.py" "$@"
+exec uv run --python 3.11 "$SCRIPT_DIR/qwen-gsm8k.py" "$@"

@@ -19,6 +19,10 @@
 import os
 os.environ.setdefault("UNSLOTH_VLLM_STANDBY", "1")
 
+ARTIFACTS_DIR = os.environ.get("ARTIFACTS_DIR", os.path.join(os.getcwd(), ".openresearch", "artifacts"))
+LORA_DIR = os.path.join(ARTIFACTS_DIR, "grpo_saved_lora")
+OUTPUT_DIR = os.path.join(ARTIFACTS_DIR, "outputs")
+
 from unsloth import FastLanguageModel
 
 import re
@@ -257,9 +261,9 @@ training_args = GRPOConfig(
     max_prompt_length=max_prompt_length,
     max_completion_length=max_completion_length,
     max_steps=1000,
-    save_steps=1000,
+    save_steps=100,
     report_to="wandb",
-    output_dir="outputs",
+    output_dir=OUTPUT_DIR,
 )
 
 trainer = GRPOTrainer(
@@ -271,9 +275,9 @@ trainer = GRPOTrainer(
 )
 trainer.train()
 
-model.save_lora("grpo_saved_lora")
+model.save_lora(LORA_DIR)
 
-with safe_open("grpo_saved_lora/adapter_model.safetensors", framework="pt") as f:
+with safe_open(os.path.join(LORA_DIR, "adapter_model.safetensors"), framework="pt") as f:
     for key in f.keys():
         tensor = f.get_tensor(key)
         n_zeros = (tensor == 0).sum() / tensor.numel()
@@ -288,6 +292,6 @@ sampling_params = SamplingParams(temperature=1.0, top_k=50, max_tokens=2048)
 output = model.fast_generate(
     text,
     sampling_params=sampling_params,
-    lora_request=model.load_lora("grpo_saved_lora"),
+    lora_request=model.load_lora(LORA_DIR),
 )[0].outputs[0].text
 print(output)
