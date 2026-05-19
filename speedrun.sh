@@ -38,6 +38,7 @@ GPU_NAME="$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head
 case "$GPU_NAME" in
   *H100*|*H200*) ARCH=hopper ;;
   *A100*)        ARCH=ampere ;;
+  *B200*)        ARCH=blackwell ;;
   *)             ARCH=unknown ;;
 esac
 echo "Detected GPU: '$GPU_NAME' -> $ARCH"
@@ -45,10 +46,16 @@ echo "Detected GPU: '$GPU_NAME' -> $ARCH"
 if [ "$ARCH" = "hopper" ]; then
   export UNSLOTH_VLLM_STANDBY=0
   export GPU_MEM_UTIL=0.7
+elif [ "$ARCH" = "blackwell" ]; then
+  export UNSLOTH_VLLM_STANDBY=0
+  export GPU_MEM_UTIL=0.7
+  # flashinfer JIT compilation fails on sm_100a with older CUDA toolkits;
+  # fall back to vllm's native torch sampler
+  export VLLM_USE_FLASHINFER_SAMPLER=0
 else
   export UNSLOTH_VLLM_STANDBY=1
   export GPU_MEM_UTIL=0.9
 fi
-echo "UNSLOTH_VLLM_STANDBY=$UNSLOTH_VLLM_STANDBY GPU_MEM_UTIL=$GPU_MEM_UTIL"
+echo "UNSLOTH_VLLM_STANDBY=$UNSLOTH_VLLM_STANDBY GPU_MEM_UTIL=$GPU_MEM_UTIL VLLM_USE_FLASHINFER_SAMPLER=${VLLM_USE_FLASHINFER_SAMPLER:-<unset>}"
 
 exec uv run --python 3.11 "$SCRIPT_DIR/qwen-4b-gsm8k.py" "$@"
