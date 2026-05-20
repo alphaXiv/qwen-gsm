@@ -19,6 +19,7 @@
 import os
 os.environ.setdefault("UNSLOTH_VLLM_STANDBY", "1")
 
+REPORT_TO = os.environ.get("REPORT_TO", "wandb")
 ARTIFACTS_DIR = os.environ.get("ARTIFACTS_DIR", os.path.join(os.getcwd(), ".openresearch", "artifacts"))
 LORA_DIR = os.path.join(ARTIFACTS_DIR, "grpo_saved_lora")
 OUTPUT_DIR = os.path.join(ARTIFACTS_DIR, "outputs")
@@ -143,7 +144,7 @@ trainer = SFTTrainer(
         weight_decay=0.001,
         lr_scheduler_type="linear",
         seed=3407,
-        report_to="wandb",
+        report_to=REPORT_TO,
     ),
 )
 trainer.train()
@@ -262,7 +263,7 @@ training_args = GRPOConfig(
     max_completion_length=max_completion_length,
     max_steps=1000,
     save_steps=100,
-    report_to="wandb",
+    report_to=REPORT_TO,
     output_dir=OUTPUT_DIR,
 )
 
